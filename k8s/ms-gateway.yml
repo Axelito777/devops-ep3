@@ -1,0 +1,86 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ms-gateway
+  namespace: smartlogix
+  labels:
+    app: ms-gateway
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: ms-gateway
+  template:
+    metadata:
+      labels:
+        app: ms-gateway
+    spec:
+      containers:
+        - name: ms-gateway
+          image: ${ECR_REGISTRY}/ms-gateway:${IMAGE_TAG}
+          ports:
+            - containerPort: 8080
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+          env:
+            - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+              valueFrom:
+                configMapKeyRef:
+                  name: smartlogix-config
+                  key: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: smartlogix-secrets
+                  key: JWT_SECRET
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 50
+            periodSeconds: 15
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ms-gateway
+  namespace: smartlogix
+spec:
+  type: LoadBalancer
+  selector:
+    app: ms-gateway
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: ms-gateway-hpa
+  namespace: smartlogix
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: ms-gateway
+  minReplicas: 2
+  maxReplicas: 5
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 50

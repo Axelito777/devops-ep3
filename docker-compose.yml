@@ -1,0 +1,139 @@
+version: '3.8'
+
+services:
+
+  # ── Infraestructura ───────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  # ── Service Discovery ─────────────────────────────────────────────────────
+  ms-eureka:
+    build:
+      context: .
+      dockerfile: ms-eureka/Dockerfile
+    container_name: ms-eureka
+    ports:
+      - "8761:8761"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8761/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
+
+  # ── API Gateway ───────────────────────────────────────────────────────────
+  ms-gateway:
+    build:
+      context: .
+      dockerfile: ms-gateway/Dockerfile
+    container_name: ms-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://ms-eureka:8761/eureka/
+      JWT_SECRET: ${JWT_SECRET:-smartlogix-secret-key-2024-super-segura-para-produccion-abc123}
+    depends_on:
+      ms-eureka:
+        condition: service_healthy
+
+  # ── Microservicios de negocio ─────────────────────────────────────────────
+  ms-auth:
+    build:
+      context: .
+      dockerfile: ms-auth/Dockerfile
+    container_name: ms-auth
+    ports:
+      - "8081:8081"
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://ms-eureka:8761/eureka/
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL:-jdbc:postgresql://aws-1-sa-east-1.pooler.supabase.com:6543/postgres?sslmode=require}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME:-postgres.gkcyyzzaizzuglmyetpe}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD:-GkCMQaTgcoo4ETva}
+      JWT_SECRET: ${JWT_SECRET:-smartlogix-secret-key-2024-super-segura-para-produccion-abc123}
+    depends_on:
+      ms-eureka:
+        condition: service_healthy
+
+  ms-clientes:
+    build:
+      context: .
+      dockerfile: ms-clientes/Dockerfile
+    container_name: ms-clientes
+    ports:
+      - "8082:8082"
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://ms-eureka:8761/eureka/
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL:-jdbc:postgresql://aws-1-sa-east-1.pooler.supabase.com:6543/postgres?sslmode=require&prepareThreshold=0}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME:-postgres.gkcyyzzaizzuglmyetpe}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD:-GkCMQaTgcoo4ETva}
+      JWT_SECRET: ${JWT_SECRET:-smartlogix-secret-key-2024-super-segura-para-produccion-abc123}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    depends_on:
+      ms-eureka:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  ms-inventario:
+    build:
+      context: .
+      dockerfile: ms-inventario/Dockerfile
+    container_name: ms-inventario
+    ports:
+      - "8083:8083"
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://ms-eureka:8761/eureka/
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL:-jdbc:postgresql://aws-1-sa-east-1.pooler.supabase.com:6543/postgres?sslmode=require&prepareThreshold=0}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME:-postgres.gkcyyzzaizzuglmyetpe}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD:-GkCMQaTgcoo4ETva}
+      JWT_SECRET: ${JWT_SECRET:-smartlogix-secret-key-2024-super-segura-para-produccion-abc123}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    depends_on:
+      ms-eureka:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  ms-pedidos:
+    build:
+      context: .
+      dockerfile: ms-pedidos/Dockerfile
+    container_name: ms-pedidos
+    ports:
+      - "8084:8084"
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://ms-eureka:8761/eureka/
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL:-jdbc:postgresql://aws-1-sa-east-1.pooler.supabase.com:6543/postgres?sslmode=require&prepareThreshold=0}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME:-postgres.gkcyyzzaizzuglmyetpe}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD:-GkCMQaTgcoo4ETva}
+      JWT_SECRET: ${JWT_SECRET:-smartlogix-secret-key-2024-super-segura-para-produccion-abc123}
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: guest
+      RABBITMQ_PASSWORD: guest
+    depends_on:
+      ms-eureka:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
