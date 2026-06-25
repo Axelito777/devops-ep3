@@ -8,7 +8,7 @@ on:
 
 env:
   AWS_REGION: us-east-1
-  EKS_CLUSTER: smartlogix-cluster
+  EKS_CLUSTER: devops-ep3
 
 jobs:
   # ── 1. Build & Test ──────────────────────────────────────────────────────────
