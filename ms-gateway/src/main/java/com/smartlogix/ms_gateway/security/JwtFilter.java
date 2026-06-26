@@ -28,7 +28,12 @@ public class JwtFilter implements WebFilter {
 
     private static final String[] RUTAS_PUBLICAS = {
         "/api/auth/login",
-        "/api/auth/registro"
+        "/api/auth/registro",
+        "/actuator",
+        "/actuator/health",
+        "/actuator/health/readiness",
+        "/actuator/health/liveness",
+        "/actuator/info"
     };
 
     /**

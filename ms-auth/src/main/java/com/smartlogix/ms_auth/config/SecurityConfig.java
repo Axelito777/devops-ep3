@@ -7,7 +7,9 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 /**
  * Configuración de seguridad del microservicio de autenticación.
@@ -43,10 +45,13 @@ public class SecurityConfig {
             )
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(
-                    "/api/auth/**", "/error",
-                    "/swagger-ui/**", "/swagger-ui.html",
-                    "/v3/api-docs/**", "/v3/api-docs",
-                    "/actuator/health/**"
+                    new AntPathRequestMatcher("/actuator/**"),
+                    new AntPathRequestMatcher("/api/auth/**"),
+                    new AntPathRequestMatcher("/error"),
+                    new AntPathRequestMatcher("/swagger-ui/**"),
+                    new AntPathRequestMatcher("/swagger-ui.html"),
+                    new AntPathRequestMatcher("/v3/api-docs/**"),
+                    new AntPathRequestMatcher("/v3/api-docs")
                 ).permitAll()
                 .anyRequest().authenticated()
             );
@@ -59,6 +64,13 @@ public class SecurityConfig {
      *
      * @return una instancia de {@link BCryptPasswordEncoder}
      */
+    @Bean
+    public WebSecurityCustomizer webSecurityCustomizer() {
+        return (web) -> web.ignoring()
+            .requestMatchers("/actuator/**")
+            .requestMatchers("/error");
+    }
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
