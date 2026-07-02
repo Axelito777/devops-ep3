@@ -9,7 +9,6 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import java.util.List;
-import java.util.stream.Collectors;
 import com.smartlogix.ms_clientes.client.PedidosClient;
 import com.smartlogix.ms_clientes.dto.PedidoResponse;
 
@@ -26,6 +25,8 @@ import com.smartlogix.ms_clientes.dto.PedidoResponse;
 @RequiredArgsConstructor
 public class ClienteService {
 
+    private static final String CLIENTE_NO_ENCONTRADO = "Cliente no encontrado";
+
     private final ClienteRepository clienteRepository;
 
     /**
@@ -38,7 +39,7 @@ public class ClienteService {
         return clienteRepository.findAll()
                 .stream()
                 .map(this::convertirAResponse)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     /**
@@ -52,7 +53,7 @@ public class ClienteService {
     public ClienteResponse obtener(String id) {
         Cliente cliente = clienteRepository.findById(id)
                 .orElseThrow(() ->
-                    new RuntimeException("Cliente no encontrado"));
+                    new RuntimeException(CLIENTE_NO_ENCONTRADO));
         return convertirAResponse(cliente);
     }
 
@@ -97,7 +98,7 @@ public class ClienteService {
     public ClienteResponse actualizar(String id, ClienteRequest request) {
         Cliente cliente = clienteRepository.findById(id)
                 .orElseThrow(() -> 
-                    new RuntimeException("Cliente no encontrado"));
+                    new RuntimeException(CLIENTE_NO_ENCONTRADO));
 
         cliente.setNombre(request.getNombre());
         cliente.setEmail(request.getEmail());
@@ -132,7 +133,7 @@ public class ClienteService {
     // Verifica que el cliente existe
     clienteRepository.findById(clienteId)
             .orElseThrow(() -> 
-                new RuntimeException("Cliente no encontrado"));
+                new RuntimeException(CLIENTE_NO_ENCONTRADO));
     
     return pedidosClient.getPedidosByCliente(clienteId);
 }
