@@ -38,7 +38,14 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            .cors(cors -> cors.disable())
+            .cors(cors -> cors.configurationSource(request -> {
+                var config = new org.springframework.web.cors.CorsConfiguration();
+                config.setAllowedOriginPatterns(java.util.List.of("*"));
+                config.setAllowedMethods(java.util.List.of("GET","POST","PUT","DELETE","OPTIONS"));
+                config.setAllowedHeaders(java.util.List.of("*"));
+                config.setAllowCredentials(false);
+                return config;
+            }))
             .csrf(csrf -> csrf.disable()) // NOSONAR
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)

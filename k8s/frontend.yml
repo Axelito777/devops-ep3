@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: smartlogix-frontend
+  namespace: smartlogix
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: smartlogix-frontend
+  template:
+    metadata:
+      labels:
+        app: smartlogix-frontend
+    spec:
+      containers:
+      - name: smartlogix-frontend
+        image: 687828332788.dkr.ecr.us-east-1.amazonaws.com/smartlogix-frontend:latest
+        ports:
+        - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: smartlogix-frontend
+  namespace: smartlogix
+spec:
+  type: LoadBalancer
+  selector:
+    app: smartlogix-frontend
+  ports:
+  - port: 80
+    targetPort: 80
