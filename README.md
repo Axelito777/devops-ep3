@@ -504,3 +504,139 @@ devops-ep3/
 # test pipeline
 # test pipeline2
 # test pipeline2
+
+---
+
+## Estrategia de Ramificación (Branching Strategy)
+
+### Modelo adoptado: GitHub Flow
+
+Se adoptó **GitHub Flow** como modelo de ramificación por su simplicidad y compatibilidad con despliegue continuo. A diferencia de Git Flow (que requiere ramas `develop`, `release` y `hotfix` permanentes), GitHub Flow usa únicamente `main` como rama estable y ramas temporales para cada cambio.
+
+| Modelo | Cuándo usarlo | Ventaja |
+|---|---|---|
+| **GitHub Flow** ✅ | Proyectos con despliegue continuo | Simple, rápido, ideal para CD |
+| **Git Flow** | Proyectos con releases programadas | Control de versiones robusto |
+| **Trunk-based** | Equipos grandes con feature flags | Integración continua extrema |
+
+### Estructura de ramas
+
+| Rama | Propósito | Permanencia |
+|---|---|---|
+| `main` | Rama principal protegida. Solo recibe merges via PR aprobado + pipeline verde | Permanente |
+| `feature/<descripcion>` | Nueva funcionalidad. Ej: `feature/cors-gateway` | Temporal |
+| `hotfix/<descripcion>` | Corrección urgente en producción. Ej: `hotfix/redis-cache-fix` | Temporal |
+| `test/<descripcion>` | Pruebas de pipeline o configuración. Ej: `test/trigger-pipeline` | Temporal |
+
+### Justificación frente a otros enfoques
+
+GitHub Flow fue elegido sobre Git Flow porque:
+- El proyecto tiene despliegue continuo a AWS EKS en cada merge a `main`
+- No hay versiones programadas ni releases con fecha fija
+- El equipo es pequeño (2 personas), reduciendo la complejidad de múltiples ramas permanentes
+- Cada PR activa automáticamente el pipeline completo (build → test → sonar → deploy)
+
+---
+
+## Convenciones y Buenas Prácticas del Repositorio
+
+### Nomenclatura de ramas
+
+Ejemplos válidos:
+- `feature/cors-configuration`
+- `hotfix/prepared-statement-fix`
+- `test/trigger-sonarqube`
+
+### Convenciones de commits (Conventional Commits)
+
+Formato: `<tipo>: <descripción en imperativo>`
+
+| Tipo | Uso |
+|---|---|
+| `feat:` | Nueva funcionalidad |
+| `fix:` | Corrección de bug |
+| `ci:` | Cambios en pipeline o configuración CI/CD |
+| `docs:` | Cambios en documentación |
+| `refactor:` | Refactorización sin cambio funcional |
+| `test:` | Agregar o corregir tests |
+| `chore:` | Tareas de mantenimiento |
+
+Ejemplos válidos:
+- `feat: agregar configuracion CORS en ms-gateway`
+- `fix: corregir prepareThreshold en URL Supabase`
+- `ci: actualizar secrets AWS en workflow deploy`
+- `docs: agregar seccion branching en README`
+
+### Reglas de Pull Request
+
+1. Todo cambio a `main` debe ir por Pull Request — nunca push directo
+2. El PR requiere al menos **1 aprobación** de un reviewer con acceso de escritura
+3. El pipeline CI/CD debe pasar completamente (build + test + SonarQube)
+4. El título del PR debe seguir el formato: `feat/fix/ci: descripción breve`
+5. El PR debe incluir descripción del cambio y capturas si aplica
+
+### Branch Protection Rules configuradas en `main`
+
+- ✅ Require pull request before merging
+- ✅ Required approvals: 1
+- ✅ Require status checks to pass (Build & Test Maven)
+- ✅ Block force pushes
+- ✅ Restrict deletions
+
+---
+
+## Flujo de Trabajo Colaborativo — Ejemplo Práctico
+
+### Agregar una nueva funcionalidad (feature)
+
+```bash
+# 1. Partir siempre desde main actualizado
+git checkout main
+git pull origin main
+
+# 2. Crear rama feature
+git checkout -b feature/nueva-funcionalidad
+
+# 3. Desarrollar y commitear con convención
+git add .
+git commit -m "feat: implementar nueva funcionalidad"
+
+# 4. Subir la rama
+git push origin feature/nueva-funcionalidad
+
+# 5. Crear Pull Request en GitHub hacia main
+# → El pipeline corre automáticamente
+# → Reviewer aprueba
+# → Se hace merge
+```
+
+### Corregir un bug urgente en producción (hotfix)
+
+```bash
+# 1. Partir desde main (que refleja producción)
+git checkout main
+git pull origin main
+
+# 2. Crear rama hotfix
+git checkout -b hotfix/descripcion-del-bug
+
+# 3. Aplicar la corrección
+git add .
+git commit -m "fix: corregir descripcion del bug"
+
+# 4. Subir y crear PR urgente
+git push origin hotfix/descripcion-del-bug
+# → PR a main con label "hotfix"
+# → Pipeline debe pasar igual
+# → Merge inmediato tras aprobación
+```
+
+### Trazabilidad del código
+
+Cada cambio en el repositorio tiene trazabilidad completa:
+- **Commit**: quién hizo el cambio, cuándo y por qué
+- **PR**: qué revisó el equipo antes de aprobar
+- **Pipeline**: evidencia automática de que build, tests y calidad pasaron
+- **Deploy**: la imagen Docker subida al ECR tiene tag con el SHA del commit
+
+ENDOFREADME
