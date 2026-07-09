@@ -13,7 +13,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * Servicio de negocio para la gestión de pedidos.
@@ -46,7 +45,7 @@ public class PedidoService {
         return pedidoRepository.findAll()
                 .stream()
                 .map(this::convertirAResponse)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     /**
