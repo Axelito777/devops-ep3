@@ -5,11 +5,8 @@ import com.smartlogix.ms_clientes.dto.ClienteResponse;
 import com.smartlogix.ms_clientes.model.Cliente;
 import com.smartlogix.ms_clientes.repository.ClienteRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import java.util.List;
-import java.util.stream.Collectors;
 import com.smartlogix.ms_clientes.client.PedidosClient;
 import com.smartlogix.ms_clientes.dto.PedidoResponse;
 
@@ -26,6 +23,8 @@ import com.smartlogix.ms_clientes.dto.PedidoResponse;
 @RequiredArgsConstructor
 public class ClienteService {
 
+    private static final String CLIENTE_NO_ENCONTRADO = "Cliente no encontrado";
+
     private final ClienteRepository clienteRepository;
 
     /**
@@ -33,12 +32,11 @@ public class ClienteService {
      *
      * @return lista de {@link ClienteResponse}; vacía si no hay clientes
      */
-    @Cacheable(value = "clientes", key = "'all'")
     public List<ClienteResponse> listar() {
         return clienteRepository.findAll()
                 .stream()
                 .map(this::convertirAResponse)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     /**
@@ -48,11 +46,10 @@ public class ClienteService {
      * @return {@link ClienteResponse} con los datos del cliente
      * @throws RuntimeException si no existe un cliente con el id indicado
      */
-    @Cacheable(value = "clientes", key = "#id")
     public ClienteResponse obtener(String id) {
         Cliente cliente = clienteRepository.findById(id)
                 .orElseThrow(() ->
-                    new RuntimeException("Cliente no encontrado"));
+                    new RuntimeException(CLIENTE_NO_ENCONTRADO));
         return convertirAResponse(cliente);
     }
 
@@ -63,7 +60,6 @@ public class ClienteService {
      * @return {@link ClienteResponse} del cliente recién creado
      * @throws RuntimeException si el email o el RUT ya están registrados
      */
-    @CacheEvict(value = "clientes", allEntries = true)
     public ClienteResponse crear(ClienteRequest request) {
         // Verifica que no exista el email
         if (clienteRepository.findByEmail(request.getEmail()).isPresent()) {
@@ -93,11 +89,10 @@ public class ClienteService {
      * @return {@link ClienteResponse} con los datos actualizados
      * @throws RuntimeException si no existe un cliente con el id indicado
      */
-    @CacheEvict(value = "clientes", allEntries = true)
     public ClienteResponse actualizar(String id, ClienteRequest request) {
         Cliente cliente = clienteRepository.findById(id)
                 .orElseThrow(() -> 
-                    new RuntimeException("Cliente no encontrado"));
+                    new RuntimeException(CLIENTE_NO_ENCONTRADO));
 
         cliente.setNombre(request.getNombre());
         cliente.setEmail(request.getEmail());
@@ -132,7 +127,7 @@ public class ClienteService {
     // Verifica que el cliente existe
     clienteRepository.findById(clienteId)
             .orElseThrow(() -> 
-                new RuntimeException("Cliente no encontrado"));
+                new RuntimeException(CLIENTE_NO_ENCONTRADO));
     
     return pedidosClient.getPedidosByCliente(clienteId);
 }

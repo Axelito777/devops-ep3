@@ -5,11 +5,8 @@ import com.smartlogix.ms_inventario.dto.ProductoResponse;
 import com.smartlogix.ms_inventario.model.Producto;
 import com.smartlogix.ms_inventario.repository.ProductoRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Servicio de negocio para la gestión del inventario de productos.
@@ -24,6 +21,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ProductoService {
 
+    private static final String PRODUCTO_NO_ENCONTRADO = "Producto no encontrado";
+
     private final ProductoRepository productoRepository;
 
     /**
@@ -31,12 +30,11 @@ public class ProductoService {
      *
      * @return lista de {@link ProductoResponse}; vacía si no hay productos
      */
-    @Cacheable(value = "productos", key = "'all'")
     public List<ProductoResponse> listar() {
         return productoRepository.findAll()
                 .stream()
                 .map(this::convertirAResponse)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     /**
@@ -46,11 +44,10 @@ public class ProductoService {
      * @return {@link ProductoResponse} con los datos del producto
      * @throws RuntimeException si no existe el producto
      */
-    @Cacheable(value = "productos", key = "#id")
     public ProductoResponse obtener(String id) {
         Producto producto = productoRepository.findById(id)
                 .orElseThrow(() ->
-                    new RuntimeException("Producto no encontrado"));
+                    new RuntimeException(PRODUCTO_NO_ENCONTRADO));
         return convertirAResponse(producto);
     }
 
@@ -60,7 +57,6 @@ public class ProductoService {
      * @param request datos del producto a registrar
      * @return {@link ProductoResponse} del producto recién creado
      */
-    @CacheEvict(value = "productos", allEntries = true)
     public ProductoResponse crear(ProductoRequest request) {
         Producto producto = new Producto();
         producto.setNombre(request.getNombre());
@@ -83,12 +79,11 @@ public class ProductoService {
      * @return {@link ProductoResponse} con el stock actualizado
      * @throws RuntimeException si el producto no existe o el stock resultante sería negativo
      */
-    @CacheEvict(value = "productos", allEntries = true)
     public ProductoResponse actualizarStock(
             String id, Integer cantidad) {
         Producto producto = productoRepository.findById(id)
                 .orElseThrow(() ->
-                    new RuntimeException("Producto no encontrado"));
+                    new RuntimeException(PRODUCTO_NO_ENCONTRADO));
 
         int stockNuevo = producto.getStock() + cantidad;
 
@@ -111,7 +106,7 @@ public class ProductoService {
                 .findByStockLessThanEqual(10)
                 .stream()
                 .map(this::convertirAResponse)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     private ProductoResponse convertirAResponse(Producto producto) {
@@ -136,11 +131,10 @@ public class ProductoService {
      * @return {@link ProductoResponse} con los datos actualizados
      * @throws RuntimeException si no existe el producto
      */
-    @CacheEvict(value = "productos", allEntries = true)
     public ProductoResponse actualizar(String id, ProductoRequest request) {
         Producto producto = productoRepository.findById(id)
                 .orElseThrow(() ->
-                    new RuntimeException("Producto no encontrado"));
+                    new RuntimeException(PRODUCTO_NO_ENCONTRADO));
 
         producto.setNombre(request.getNombre());
         producto.setDescripcion(request.getDescripcion());
@@ -160,11 +154,10 @@ public class ProductoService {
      * @param id identificador UUID del producto a eliminar
      * @throws RuntimeException si no existe el producto
      */
-    @CacheEvict(value = "productos", allEntries = true)
     public void eliminar(String id) {
         productoRepository.findById(id)
                 .orElseThrow(() ->
-                    new RuntimeException("Producto no encontrado"));
+                    new RuntimeException(PRODUCTO_NO_ENCONTRADO));
         productoRepository.deleteById(id);
     }
 }

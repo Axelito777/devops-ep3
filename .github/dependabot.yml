@@ -1,0 +1,65 @@
+version: 2
+updates:
+  - package-ecosystem: "maven"
+    directory: "/ms-auth"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "java"
+
+  - package-ecosystem: "maven"
+    directory: "/ms-clientes"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "java"
+
+  - package-ecosystem: "maven"
+    directory: "/ms-inventario"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "java"
+
+  - package-ecosystem: "maven"
+    directory: "/ms-pedidos"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "java"
+
+  - package-ecosystem: "maven"
+    directory: "/ms-gateway"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "java"
+
+  - package-ecosystem: "maven"
+    directory: "/ms-eureka"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "java"
+
+  - package-ecosystem: "docker"
+    directory: "/ms-auth"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "docker"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "ci-cd"
