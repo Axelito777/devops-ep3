@@ -503,3 +503,4 @@ devops-ep3/
 | **JaCoCo umbral ≥ 60 %** | Excluyendo controllers y Application.class, el umbral se aplica sobre la lógica de negocio real (servicios, repositorios, DTOs). |
 # test pipeline
 # test pipeline2
+# test pipeline2
