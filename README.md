@@ -502,3 +502,4 @@ devops-ep3/
 | **Multi-stage Dockerfile** | Imagen de build separada de la imagen de runtime. La imagen final solo contiene el JRE Alpine y el JAR, sin Maven ni código fuente. |
 | **JaCoCo umbral ≥ 60 %** | Excluyendo controllers y Application.class, el umbral se aplica sobre la lógica de negocio real (servicios, repositorios, DTOs). |
 # test pipeline
+# test pipeline2
