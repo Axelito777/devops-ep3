@@ -5,8 +5,6 @@ import com.smartlogix.ms_clientes.dto.ClienteResponse;
 import com.smartlogix.ms_clientes.model.Cliente;
 import com.smartlogix.ms_clientes.repository.ClienteRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import com.smartlogix.ms_clientes.client.PedidosClient;
@@ -34,7 +32,6 @@ public class ClienteService {
      *
      * @return lista de {@link ClienteResponse}; vacía si no hay clientes
      */
-    @Cacheable(value = "clientes", key = "'all'")
     public List<ClienteResponse> listar() {
         return clienteRepository.findAll()
                 .stream()
@@ -49,7 +46,6 @@ public class ClienteService {
      * @return {@link ClienteResponse} con los datos del cliente
      * @throws RuntimeException si no existe un cliente con el id indicado
      */
-    @Cacheable(value = "clientes", key = "#id")
     public ClienteResponse obtener(String id) {
         Cliente cliente = clienteRepository.findById(id)
                 .orElseThrow(() ->
@@ -64,7 +60,6 @@ public class ClienteService {
      * @return {@link ClienteResponse} del cliente recién creado
      * @throws RuntimeException si el email o el RUT ya están registrados
      */
-    @CacheEvict(value = "clientes", allEntries = true)
     public ClienteResponse crear(ClienteRequest request) {
         // Verifica que no exista el email
         if (clienteRepository.findByEmail(request.getEmail()).isPresent()) {
@@ -94,7 +89,6 @@ public class ClienteService {
      * @return {@link ClienteResponse} con los datos actualizados
      * @throws RuntimeException si no existe un cliente con el id indicado
      */
-    @CacheEvict(value = "clientes", allEntries = true)
     public ClienteResponse actualizar(String id, ClienteRequest request) {
         Cliente cliente = clienteRepository.findById(id)
                 .orElseThrow(() -> 
